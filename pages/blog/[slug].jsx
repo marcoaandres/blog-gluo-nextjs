@@ -10,6 +10,7 @@ const client = createClient({
     space: process.env.CONTENTFUL_SPACE_ID
 })
 
+//obtenemos los slugs de cada blog
 export const getStaticPaths = async () => {
     const res = await client.getEntries({ 
         content_type: 'blogGluo'
@@ -27,6 +28,7 @@ export const getStaticPaths = async () => {
     }
 }
 
+//obtenemos las propiedades del blog que queremos ver
 export async function getStaticProps({params}){
     const {items} = await client.getEntries({
         content_type: 'blogGluo',
@@ -34,7 +36,12 @@ export async function getStaticProps({params}){
     })
 
     return{
-        props: {article: items[0]}
+        props: {article: items[0]},
+
+        //Regeneracion estatica incremental
+        //Una vez cargado el contenido esperamos como maximo 1s para acceder al contenido en servidor
+        // y verificar si hay cambios 
+        revalidate: 1
     }
 
 }
