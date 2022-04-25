@@ -47,7 +47,7 @@ export async function getStaticProps({params}){
         }
     }
     return{
-        props: {article: items[0]},
+        props: { article: items[0] },
 
         //Regeneracion estatica incremental
         //Una vez cargado el contenido esperamos como maximo 1s para acceder al contenido en servidor

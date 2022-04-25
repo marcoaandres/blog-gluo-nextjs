@@ -15,14 +15,12 @@ export async function getStaticProps(){
   const res = await client.getEntries({ content_type: 'blogGluo' })
 
   return {
-    props:{
-      articles: res.items,
-      //Regeneracion estatica incremental
+    props:{ articles: res.items },
+    //Regeneracion estatica incremental
         //Una vez cargado el contenido esperamos como maximo 1s para acceder al contenido en servidor
         // y verificar si hay cambios 
         
         revalidate: 1
-    }
   }
 }
 
