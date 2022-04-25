@@ -37,6 +37,15 @@ export async function getStaticProps({params}){
         'fields.slug': params.slug
     })
 
+    //si no encuntra el elemento, redireccionara al blog
+    if(!items.length){
+        return{
+            redirect:{
+                destination: '/blog',
+                permanent: false,
+            }
+        }
+    }
     return{
         props: {article: items[0]},
 
@@ -50,8 +59,10 @@ export async function getStaticProps({params}){
 
 
 export default function Article({article}) {
+    //si no hay articulo, presentamos el loadign mientras en segundo plano se vuelve a hacer la consulta
     if(!article) return <div>Loading...</div>
-    
+    // ^ podria ser un ocmopoente skeleton que nos de la impresion que el articulo esta cargando
+
     const {author, creationDate, excerpt, title, body, thumbnail, metaDescription, metaKeywords} = article.fields;
     const authorFullname = author.fields.fullName;
     console.log(article)
