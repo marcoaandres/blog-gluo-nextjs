@@ -24,7 +24,9 @@ export const getStaticPaths = async () => {
 
     return{
         paths,
-        fallback: false,
+        //false -> si no encuenttra la pagina, regres un 404
+        //true -> regresa otra pagina 
+        fallback: true,
     }
 }
 
@@ -48,6 +50,8 @@ export async function getStaticProps({params}){
 
 
 export default function Article({article}) {
+    if(!article) return <div>Loading...</div>
+    
     const {author, creationDate, excerpt, title, body, thumbnail, metaDescription, metaKeywords} = article.fields;
     const authorFullname = author.fields.fullName;
     console.log(article)
