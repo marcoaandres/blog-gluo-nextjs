@@ -1,24 +1,43 @@
 import { createClient } from 'contentful'
 import React from 'react'
 import Image from 'next/image'
-import { documentToReactComponents } from '@contentful/rich-text-react-renderer'
 import { Container, Row, Col } from 'react-bootstrap'
 import Layout from '../../components/Layout'
-
-const client = createClient({
-    accessToken: process.env.CONTENTFUL_ACCESS_KEY,
-    space: process.env.CONTENTFUL_SPACE_ID
-})
+import SideBar from "../../components/SideBar"
+import BodyArticle from '../../components/BodyArticle'
 
 //obtenemos los slugs de cada blog
 export const getStaticPaths = async () => {
-    const res = await client.getEntries({ 
-        content_type: 'blogGluo'
-    })
+    //graphql
+  const result = await fetch(`https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.CONTENTFUL_ACCESS_KEY} `,
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          query:
+          `query{
+              allArticles:
+                blogGluoCollection{
+                    items{
+                    slug
+                    }
+                }
+          }
+          `
+      }) 
+  });
+  if(!result.ok){
+      console.log(error);
+      return {};
+  }
+  const {data} = await result.json();
+  const {items} = data.allArticles;
 
-    const paths = res.items.map( item=>{
+    const paths = items.map( item=>{
         return{
-            params: {slug: item.fields.slug}
+            params: {slug: item.slug}
         }
     })
 
@@ -32,22 +51,84 @@ export const getStaticPaths = async () => {
 
 //obtenemos las propiedades del blog que queremos ver
 export async function getStaticProps({params}){
-    const {items} = await client.getEntries({
-        content_type: 'blogGluo',
-        'fields.slug': params.slug
-    })
+    //graphql
+  const result = await fetch(`https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.CONTENTFUL_ACCESS_KEY} `,
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          query:
+          `query($slugArticle: String!){
+              allCategories:
+                categoriasGluoCollection{
+                    items{
+                        title,
+                        slug
+                    }
+                }
+              oneArticle:
+                blogGluoCollection(where:{
+                    slug: $slugArticle
+                }, limit: 1){
+                    items{
+                    ...blogGluoFields
+                    }
+                }
+                 
+          }
+          fragment blogGluoFields on BlogGluo{
+            title,
+            slug,
+            excerpt,
+            body{
+                json,
+                links{
+                  assets{
+                    block{
+                      sys{
+                        id
+                      },
+                      url,
+                      title
+                    }
+                  }
+                }
+            },
+            metaDescription,
+            metaKeywords,
+            creationDate,
+            author{
+              fullName
+            },
+            thumbnail{
+                url,
+            }
+            categoryCollection{
+                items{
+                title,
+                slug
 
-    //si no encuntra el elemento, redireccionara al blog
-    if(!items.length){
-        return{
-            redirect:{
-                destination: '/blog',
-                permanent: false,
+                }
             }
         }
-    }
+          `,
+          variables:{
+              slugArticle: params.slug
+          },
+          
+      }) 
+  });
+
+    const {data} = await result.json();
+    const oneArticle = data.oneArticle.items[0];
+    const allCategories = data.allCategories.items;
     return{
-        props: { article: items[0] },
+        props: { 
+                oneArticle,
+                allCategories
+            },
 
         //Regeneracion estatica incremental
         //Una vez cargado el contenido esperamos como maximo 1s para acceder al contenido en servidor
@@ -58,14 +139,14 @@ export async function getStaticProps({params}){
 }
 
 
-export default function Article({article}) {
+export default function Article({oneArticle, allCategories}) {
     //si no hay articulo, presentamos el loadign mientras en segundo plano se vuelve a hacer la consulta
-    if(!article) return <div>Loading...</div>
+    if(!oneArticle) return <div>Loading...</div>
     // ^ podria ser un ocmopoente skeleton que nos de la impresion que el articulo esta cargando
 
-    const {author, creationDate, excerpt, title, body, thumbnail, metaDescription, metaKeywords} = article.fields;
-    const authorFullname = author.fields.fullName;
-    console.log(article)
+    const {author, creationDate, excerpt, title, body, thumbnail, metaDescription, metaKeywords} = oneArticle;
+    const authorFullname = author.fullName;
+    // console.log(article)
   return (
         <Layout
         titlePage={title}
@@ -75,24 +156,21 @@ export default function Article({article}) {
             <Container>
                 <Row>
                     <Col sm={4}>
-                        <aside>
-                            <h2>Categorias</h2>
+                         <aside>
+                            <SideBar categories={allCategories} />
                         </aside>
                     </Col>
                     <Col sm={8}>
                         <article>
-                            <Image src={`https:${thumbnail.fields.file.url}`} alt={title}
-                            width={thumbnail.fields.file.details.image.width} 
-                            height={thumbnail.fields.file.details.image.height} 
+                            <Image src={thumbnail.url} alt={title}
+                            width={300} 
+                            height={300} 
                             />
                             <h1>{title}</h1>
                             <span>{creationDate} | {authorFullname}  </span>
                             <p>{excerpt}</p>
-                            <div>
-                                {
-                                    documentToReactComponents(body)
-                                }
-                            </div>
+
+                            <BodyArticle body={body}/>
                         </article>
                     </Col>
                 </Row>
