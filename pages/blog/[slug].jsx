@@ -5,35 +5,12 @@ import { Container, Row, Col } from 'react-bootstrap'
 import Layout from '../../components/Layout'
 import SideBar from "../../components/SideBar"
 import BodyArticle from '../../components/BodyArticle'
+import Api from '@utils/Api'
 
 //obtenemos los slugs de cada blog
-export const getStaticPaths = async () => {
-    //graphql
-  const result = await fetch(`https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.CONTENTFUL_ACCESS_KEY} `,
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-          query:
-          `query{
-              allArticles:
-                blogGluoCollection{
-                    items{
-                    slug
-                    }
-                }
-          }
-          `
-      }) 
-  });
-  if(!result.ok){
-      console.log(error);
-      return {};
-  }
-  const {data} = await result.json();
-  const {items} = data.allArticles;
+export async function getStaticPaths(){
+const allPostsSlug = await Api.getAllPostsSlug();
+const {items} = allPostsSlug;
 
     const paths = items.map( item=>{
         return{
@@ -50,84 +27,24 @@ export const getStaticPaths = async () => {
 }
 
 //obtenemos las propiedades del blog que queremos ver
-export async function getStaticProps({params}){
-    //graphql
-  const result = await fetch(`https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.CONTENTFUL_ACCESS_KEY} `,
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-          query:
-          `query($slugArticle: String!){
-              allCategories:
-                categoriasGluoCollection{
-                    items{
-                        title,
-                        slug
-                    }
-                }
-              oneArticle:
-                blogGluoCollection(where:{
-                    slug: $slugArticle
-                }, limit: 1){
-                    items{
-                    ...blogGluoFields
-                    }
-                }
-                 
-          }
-          fragment blogGluoFields on BlogGluo{
-            title,
-            slug,
-            excerpt,
-            body{
-                json,
-                links{
-                  assets{
-                    block{
-                      sys{
-                        id
-                      },
-                      url,
-                      title
-                    }
-                  }
-                }
-            },
-            metaDescription,
-            metaKeywords,
-            creationDate,
-            author{
-              fullName
-            },
-            thumbnail{
-                url,
-            }
-            categoryCollection{
-                items{
-                title,
-                slug
+export async function getStaticProps({ params }){
+    const data = await Api.getOnePost(params.slug);
+    const oneArticle = data.items[0];
 
-                }
+    if(!oneArticle){
+        return {
+            redirect:{
+                destination: '/blog',
+                permanent: false,
             }
-        }
-          `,
-          variables:{
-              slugArticle: params.slug
-          },
-          
-      }) 
-  });
+        };
+    }
 
-    const {data} = await result.json();
-    const oneArticle = data.oneArticle.items[0];
-    const allCategories = data.allCategories.items;
+    // const allCategories = data.allCategories.items;
     return{
         props: { 
                 oneArticle,
-                allCategories
+                // allCategories
             },
 
         //Regeneracion estatica incremental
@@ -157,7 +74,7 @@ export default function Article({oneArticle, allCategories}) {
                 <Row>
                     <Col sm={4}>
                          <aside>
-                            <SideBar categories={allCategories} />
+                            {/* <SideBar categories={allCategories} /> */}
                         </aside>
                     </Col>
                     <Col sm={8}>

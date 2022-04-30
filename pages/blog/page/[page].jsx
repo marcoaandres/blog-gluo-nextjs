@@ -1,29 +1,46 @@
-import { createClient } from "contentful"
+import React from 'react'
+import Api from '@utils/Api'
+import { Config } from '@utils/Config'
 import { Col, Container, Row } from "react-bootstrap"
 import Article from "@components/Article"
 import Layout from "@components/Layout"
 import SideBar from "@components/SideBar"
-import Api from "@utils/Api"
-import {Config} from "@utils/Config"
-import Pagination from "@components/Pagination"
+import Pagination from '@components/Pagination'
 
-// Traer contenido de tipo 'blog' en forma estatica
-export async function getStaticProps(){
-  const data = await Api.getPaginatedPost(1);
+export async function getStaticPaths(){
+  const totalArticles = await Api.getTotalPostsNumber();
+  const totalPages = Math.ceil(totalArticles / Config.pagination.pageSize);
+
+  const paths = [];
+
+  //definimos la lista de rutas a representar al momento de la compilacion
+  for (let page = 2; page <= totalPages; page++) {
+    paths.push({ params: { page: page.toString() } });
+  }
+
+  return{
+    paths,
+    fallback: false,
+  }
+}
+
+//Indicamos que ruta queremos representar
+export async function getStaticProps({ params }) {
+  const data = await Api.getPaginatedPost(params.page);
   const articles = data.items;
   const totalArticles = data.total;
   const totalPages = Math.ceil(totalArticles / Config.pagination.pageSize);
 
-  return{
-    props:{
+  return {
+    props: {
       articles,
       totalPages,
-      currentPage: "1",
-    }
-
+      currentPage: params.page,
+    },
   }
 }
-export default function Home({ articles, totalPages, currentPage }) {
+
+export default function IndexPage({articles, totalPages, currentPage}) {
   const nextDisabled = parseInt(currentPage, 10) === parseInt(totalPages, 10);
   const prevDisabled = parseInt(currentPage, 10) === 1;
   return (
@@ -65,5 +82,3 @@ export default function Home({ articles, totalPages, currentPage }) {
     </Layout>
   )
 }
-
-

@@ -1,8 +1,8 @@
 import React from 'react'
 import { createClient } from 'contentful'
-import Article from '../../components/Article'
+import Article from '../../../components/Article'
 import {Container,Row, Col } from 'react-bootstrap'
-import SideBar from '../../components/SideBar'
+import SideBar from '../../../components/SideBar'
 
 //obtenemos los slugs de cada blog
 export const getStaticPaths = async () => {
@@ -116,6 +116,15 @@ export async function getStaticProps({params}){
   const oneCategory = data.oneCategory.items[0];
   const allCategories = data.allCategories.items;
   const articles = data.articlesCategory.items[0].linkedFrom.blogGluoCollection.items;
+
+  if(!oneCategory || !articles.length || !articles ){
+        return {
+            redirect:{
+                destination: '/blog',
+                permanent: false,
+            }
+        };
+    }
     return{
         props: { 
                 oneCategory,
