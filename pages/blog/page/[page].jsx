@@ -12,7 +12,7 @@ export async function getStaticPaths(){
   const totalPages = Math.ceil(totalArticles / Config.pagination.pageSize);
 
   const paths = [];
-
+console.log(paths);
   //definimos la lista de rutas a representar al momento de la compilacion
   for (let page = 2; page <= totalPages; page++) {
     paths.push({ params: { page: page.toString() } });
@@ -26,8 +26,10 @@ export async function getStaticPaths(){
 
 //Indicamos que ruta queremos representar
 export async function getStaticProps({ params }) {
+  console.log("page");
+  console.log(params);
   const data = await Api.getPaginatedPost(params.page);
-  console.log(data);
+  
   const allCategories = data.allCategories.items;
   const articles = data.articleCollection.items;
   const totalArticles = data.articleCollection.total;

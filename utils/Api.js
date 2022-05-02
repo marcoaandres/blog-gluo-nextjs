@@ -208,12 +208,12 @@ export default class Api {
   }
 
   //fuuncion para obtener una categoria y sus post
-  static async getItemsCategory(slug, page){
+  static async getItemsCategory(page){
     const skipMultiplier = page === 1 ? 0 : page - 1;
     const skip =
       skipMultiplier > 0 ? Config.pagination.pageSize * skipMultiplier : 0;
 
-    slug = '"' + slug + '"';
+    // slug = '"' + slug + '"';
 
       const query = `
         {
@@ -226,21 +226,23 @@ export default class Api {
               }
               oneCategory:
                 categoriasGluoCollection(where:{
-                    slug: ${slug}
+                    slug: "ux"
                 }, limit: 1){
                     items{
                     title,
+                    slug,
                     }
                 }
                 articleCollection:
                 categoriasGluoCollection(where:{
-                    slug_contains: ${slug}
+                    slug_contains: "ux"
                 }, limit: 1){
                     items{
                     title,
                     linkedFrom{
-                        blogGluoCollection(limit: ${Config.pagination.pageSize}, 
-                    skip:${skip}){
+                        blogGluoCollection(limit: 4, 
+                    skip:0){
+                      total,
                         items{
                             ...blogGluoFields
                         }
@@ -267,9 +269,6 @@ export default class Api {
                 }
             }
         }
-
-        
-        
       `
     const response = await this.callContentful(query);
     const {data} = response;
@@ -284,7 +283,7 @@ export default class Api {
       {
         articleCollection:
             categoriasGluoCollection(where:{
-                slug_contains: "ux"
+                slug_contains: ${slug}
             }, limit: 1){
                 items{
                 linkedFrom{
