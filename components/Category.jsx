@@ -6,7 +6,7 @@ export default function Category({category}) {
     
   return (
     <div>
-        <Link href={`/category/${slug}`}>
+        <Link href={`/blog/category/${slug}`}>
             <a>{title}</a>
         </Link>
     </div>

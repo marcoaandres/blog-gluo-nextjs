@@ -27,12 +27,15 @@ export async function getStaticPaths(){
 //Indicamos que ruta queremos representar
 export async function getStaticProps({ params }) {
   const data = await Api.getPaginatedPost(params.page);
-  const articles = data.items;
-  const totalArticles = data.total;
+  console.log(data);
+  const allCategories = data.allCategories.items;
+  const articles = data.articleCollection.items;
+  const totalArticles = data.articleCollection.total;
   const totalPages = Math.ceil(totalArticles / Config.pagination.pageSize);
 
   return {
     props: {
+      allCategories,
       articles,
       totalPages,
       currentPage: params.page,
@@ -40,7 +43,7 @@ export async function getStaticProps({ params }) {
   }
 }
 
-export default function IndexPage({articles, totalPages, currentPage}) {
+export default function IndexPage({allCategories, articles, totalPages, currentPage}) {
   const nextDisabled = parseInt(currentPage, 10) === parseInt(totalPages, 10);
   const prevDisabled = parseInt(currentPage, 10) === 1;
   return (
@@ -55,7 +58,7 @@ export default function IndexPage({articles, totalPages, currentPage}) {
             <Row>
                 <Col sm={4}>
                     <aside>
-                        {/* <SideBar categories={categories} /> */}
+                        <SideBar categories={allCategories} />
                     </aside>
                 </Col>
                 <Col sm={8}>

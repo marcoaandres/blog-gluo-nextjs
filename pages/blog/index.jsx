@@ -10,12 +10,19 @@ import Pagination from "@components/Pagination"
 // Traer contenido de tipo 'blog' en forma estatica
 export async function getStaticProps(){
   const data = await Api.getPaginatedPost(1);
-  const articles = data.items;
-  const totalArticles = data.total;
+  // console.log(data);
+  const paginatedPost = data.articleCollection
+      ? data.articleCollection
+      : { total: 0, items: [] };
+
+  const allCategories = data.allCategories.items;
+  const articles = paginatedPost.items;
+  const totalArticles = paginatedPost.total;
   const totalPages = Math.ceil(totalArticles / Config.pagination.pageSize);
 
   return{
     props:{
+      allCategories,
       articles,
       totalPages,
       currentPage: "1",
@@ -23,7 +30,7 @@ export async function getStaticProps(){
 
   }
 }
-export default function Home({ articles, totalPages, currentPage }) {
+export default function Home({ articles, totalPages, currentPage, allCategories }) {
   const nextDisabled = parseInt(currentPage, 10) === parseInt(totalPages, 10);
   const prevDisabled = parseInt(currentPage, 10) === 1;
   return (
@@ -38,7 +45,7 @@ export default function Home({ articles, totalPages, currentPage }) {
             <Row>
                 <Col sm={4}>
                     <aside>
-                        {/* <SideBar categories={categories} /> */}
+                        <SideBar categories={allCategories} />
                     </aside>
                 </Col>
                 <Col sm={8}>

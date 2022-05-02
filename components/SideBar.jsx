@@ -4,7 +4,8 @@ import Category from './Category'
 
 
 export default function SideBar({categories}) {
-    console.log(categories)
+    // console.log("SideBar")
+    // console.log(categories)
   return (
     <div>
         <h2>Categorías</h2>

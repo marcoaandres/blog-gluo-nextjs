@@ -1,17 +1,33 @@
 import React from 'react'
 import Link from 'next/link'
 
-export default function Pagination({totalPages, currentPage, prevDisabled, nextDisabled}) {
+export default function Pagination({totalPages, currentPage, prevDisabled, nextDisabled, category}) {
 
-    //pagina anterior
-    const prevPage =
+    // console.log(category);
+        //pagina anterior
+    let prevPage =
     currentPage === "2"
       ? "/blog"
       : `/blog/page/${parseInt(currentPage, 10) - 1}`;
 
     //pagina siguiente
-    const nextPage = 
+    let nextPage = 
     `/blog/page/${parseInt(currentPage, 10) + 1}`;
+
+    
+    if(category){
+        //pagina anterior
+    prevPage =
+    currentPage === "2"
+      ? `/blog/${category}`
+      : `/blog/${category}/page/${parseInt(currentPage, 10) - 1}`;
+
+    //pagina siguiente
+    nextPage = 
+    `/blog/${category}/page/${parseInt(currentPage, 10) + 1}`;
+
+    }
+    
 
   return (
     <nav aria-label="Page navigation example" className="mt-5">

@@ -60,7 +60,15 @@ export default class Api {
                         ...blogGluoFields
                     }
                 }
+            allCategories:
+              categoriasGluoCollection(order: title_ASC){
+                  items{
+                      title,
+                      slug
+                  }
+              }
             }
+          
             fragment blogGluoFields on BlogGluo{
                 sys{
                     id
@@ -81,13 +89,16 @@ export default class Api {
 
     //usamos la funcion callContenful
     const response = await this.callContentful(query);
+        console.log(response);
+    const {data} = response;
+    console.log(data);
     
-    const paginatedPost = response.data.articleCollection
-      ? response.data.articleCollection
-      : { total: 0, items: [] };
+    // const paginatedPost = response.data.articleCollection
+    //   ? response.data.articleCollection
+    //   : { total: 0, items: [] };
 
     //   console.log(paginatedPost);
-    return paginatedPost;
+    return data;
   }
 
   //funcion para obetenr todos los slogs de los articulos
@@ -173,5 +184,125 @@ export default class Api {
     const post = response.data.onePost;
      
     return post;
+  }
+
+  //funcion para obtener todas las categorias
+  static async getAllCategories(){
+    const query = `
+      {
+        allCategories:
+        categoriasGluoCollection{
+            items{
+            slug,
+            title
+            }
+        }
+      }
+    `;
+    //usamos la funcion callContenful
+    const response = await this.callContentful(query);
+    const allCategories = response.data.allCategories;
+    
+    return allCategories;
+
+  }
+
+  //fuuncion para obtener una categoria y sus post
+  static async getItemsCategory(slug, page){
+    const skipMultiplier = page === 1 ? 0 : page - 1;
+    const skip =
+      skipMultiplier > 0 ? Config.pagination.pageSize * skipMultiplier : 0;
+
+    slug = '"' + slug + '"';
+
+      const query = `
+        {
+          allCategories:
+              categoriasGluoCollection(order: title_ASC){
+                  items{
+                      title,
+                      slug
+                  }
+              }
+              oneCategory:
+                categoriasGluoCollection(where:{
+                    slug: ${slug}
+                }, limit: 1){
+                    items{
+                    title,
+                    }
+                }
+                articleCollection:
+                categoriasGluoCollection(where:{
+                    slug_contains: ${slug}
+                }, limit: 1){
+                    items{
+                    title,
+                    linkedFrom{
+                        blogGluoCollection(limit: ${Config.pagination.pageSize}, 
+                    skip:${skip}){
+                        items{
+                            ...blogGluoFields
+                        }
+                      }
+                  }
+                }
+              }
+}
+          
+          fragment blogGluoFields on BlogGluo{
+              sys{
+                  id
+              },
+            title,
+            slug,
+            thumbnail{
+                url,
+            }
+            categoryCollection{
+                items{
+                title,
+                slug
+
+                }
+            }
+        }
+
+        
+        
+      `
+    const response = await this.callContentful(query);
+    const {data} = response;
+    console.log(data);
+    return data;
+  }
+
+  //funcion para pedir el numero total de articulos del blog
+  static async getTotalPostsNumberCategory(slug) {
+    slug = '"' + slug + '"';
+    const query = `
+      {
+        articleCollection:
+            categoriasGluoCollection(where:{
+                slug_contains: "ux"
+            }, limit: 1){
+                items{
+                linkedFrom{
+                    blogGluoCollection{
+                      total
+                  }
+              }
+            }
+          }
+      }
+    `;
+
+    //usamos la funcion callContenful
+    const response = await this.callContentful(query);
+    const totalPosts = response.data.articleCollection.items.linkedFrom.blogGluoCollection.total
+      ? response.data.articleCollection.items.linkedFrom.blogGluoCollection.total
+      : 0;
+
+    return totalPosts;
   }
 }
