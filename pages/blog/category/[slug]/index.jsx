@@ -19,8 +19,9 @@ export async function getStaticPaths() {
             params: {slug: item.slug}
         }
     })
-    console.log("Categories")
-    console.log(paths);
+    // console.log("Categories")
+    // console.log(paths);
+   
     return{
         paths,
         //false -> si no encuenttra la pagina, regres un 404
@@ -29,17 +30,19 @@ export async function getStaticPaths() {
     }
 }
 //obtenemos las propiedades de la categoria que queremos ver y los articulos de esta categoria
-export async function getStaticProps({params}){
-    // console.log(params.slug);
-  const data = await Api.getItemsCategory(params.slug, 1);
+export async function getStaticProps({params}){   
+     Config.category.slug = params.slug;
+     console.log("------------ Index Category blog --------------");
+     console.log(Config.category.slug);
+     console.log("-----------------------------------------------");
 
-//   console.log(data);
+  const data = await Api.getItemsCategory(1, params.slug);
 
   const oneCategory = data.oneCategory.items[0];
   const allCategories = data.allCategories.items;
   const articles = data.articleCollection.items[0].linkedFrom.blogGluoCollection.items;
   const totalArticles = data.articleCollection.items[0].linkedFrom.blogGluoCollection.total;
-  console.log(oneCategory);
+//   console.log(oneCategory);
   const totalPages = Math.ceil(totalArticles / Config.pagination.pageSize);
 
 //   if(!oneCategory || !articles.length || !articles ){

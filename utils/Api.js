@@ -208,12 +208,15 @@ export default class Api {
   }
 
   //fuuncion para obtener una categoria y sus post
-  static async getItemsCategory(page){
+  static async getItemsCategory(page, category){
+    console.log("Categoria Api");
+    console.log(page, category);
+
     const skipMultiplier = page === 1 ? 0 : page - 1;
     const skip =
       skipMultiplier > 0 ? Config.pagination.pageSize * skipMultiplier : 0;
 
-    // slug = '"' + slug + '"';
+    category = '"' + category + '"';
 
       const query = `
         {
@@ -226,7 +229,7 @@ export default class Api {
               }
               oneCategory:
                 categoriasGluoCollection(where:{
-                    slug: "ux"
+                    slug: ${category}
                 }, limit: 1){
                     items{
                     title,
@@ -235,13 +238,13 @@ export default class Api {
                 }
                 articleCollection:
                 categoriasGluoCollection(where:{
-                    slug_contains: "ux"
+                    slug_contains: ${category}
                 }, limit: 1){
                     items{
                     title,
                     linkedFrom{
-                        blogGluoCollection(limit: 4, 
-                    skip:0){
+                        blogGluoCollection(limit: ${Config.pagination.pageSize}, 
+                    skip:${skip}){
                       total,
                         items{
                             ...blogGluoFields
@@ -272,18 +275,24 @@ export default class Api {
       `
     const response = await this.callContentful(query);
     const {data} = response;
+    // console.log(data.articleCollection.items);
+    console.log("Api");
     console.log(data);
+    console.log(data.oneCategory.items[0]);
+    console.log(category);
     return data;
   }
 
   //funcion para pedir el numero total de articulos del blog
-  static async getTotalPostsNumberCategory(slug) {
-    slug = '"' + slug + '"';
+  static async getTotalPostsNumberCategory(category) {
+    // slug = Config.category.slug;
+    category = '"' + category + '"';
+
     const query = `
       {
         articleCollection:
             categoriasGluoCollection(where:{
-                slug_contains: ${slug}
+                slug_contains: ${category}
             }, limit: 1){
                 items{
                 linkedFrom{

@@ -1,5 +1,8 @@
 export const Config = {
   pagination: {
-    pageSize: 1,
+    pageSize: 2,
   },
+  category:{
+    slug: '',
+  }
 };
